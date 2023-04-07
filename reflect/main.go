@@ -7,4 +7,5 @@ import (
 
 func main() {
 	fmt.Println(config.App)
+	fmt.Printf("config.Mysql=%#v\n", config.Mysql)
 }

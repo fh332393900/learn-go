@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -54,5 +56,48 @@ func init() {
 		s[1] = strings.Trim(s[1], "\"")
 		config[s[0]] = s[1]
 	}
-	fmt.Println(config)
+	reflectParse(&App)
+	reflectParse(&Mysql)
+}
+
+func reflectParse(c interface{}) {
+	rType := reflect.TypeOf(c)
+	rValue := reflect.ValueOf(c)
+
+	if rType.Kind() != reflect.Ptr {
+		fmt.Print("Can only be pointer type")
+		return
+	}
+	rType = rType.Elem()
+	rValue = rValue.Elem()
+
+	for i := 0; i < rType.NumField(); i++ {
+		envValue := ""
+		tField := rType.Field(i)
+		vField := rValue.Field(i)
+
+		env := tField.Tag.Get("env")
+		dValue := tField.Tag.Get("default")
+		if env != "" {
+			configValue, ok := config[env]
+			if ok {
+				envValue = configValue
+			}
+		} else if dValue != "" {
+			envValue = dValue
+		}
+
+		rFieldType := tField.Type.Kind()
+
+		switch rFieldType {
+		case reflect.String:
+			vField.Set(reflect.ValueOf(envValue))
+		case reflect.Int:
+			envValue, _ := strconv.Atoi(envValue)
+			vField.Set(reflect.ValueOf(envValue))
+		case reflect.Int64:
+			envValue, _ := strconv.ParseInt(envValue, 10, 64)
+			vField.Set(reflect.ValueOf(envValue))
+		}
+	}
 }
