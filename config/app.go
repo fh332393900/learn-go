@@ -44,6 +44,7 @@ func init() {
 	var reg *regexp.Regexp
 	for {
 		inputString, readerError := inputReader.ReadString('\n')
+		fmt.Println(readerError, "readerError")
 		if readerError == io.EOF {
 			break
 		}
